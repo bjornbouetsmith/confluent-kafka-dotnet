@@ -14,6 +14,7 @@
 //
 // Refer to LICENSE for more information.
 
+using System.IO;
 using Xunit;
 
 
@@ -28,12 +29,29 @@ namespace Confluent.Kafka.UnitTests.Serialization
         public void CanReconstructByteArray(byte[] values)
         {
             Assert.Equal(values, Deserializers.ByteArray.Deserialize(Serializers.ByteArray.Serialize(values, SerializationContext.Empty), false, SerializationContext.Empty));
+            var ms = new MemoryStream();
         }
 
         [Fact]
         public void CanReconstructByteArrayNull()
         {
             Assert.Null(Deserializers.ByteArray.Deserialize(Serializers.ByteArray.Serialize(null, SerializationContext.Empty), true, SerializationContext.Empty));
+        }
+
+        [Theory]
+        [InlineData(new byte[0])]
+        [InlineData(new byte[] { 1 })]
+        [InlineData(new byte[] { 1, 2, 3, 4, 5 })]
+        public void CanSerializeToStreamAndReconstruct(byte[] values)
+        {
+            IStreamSerializer<byte[]> serializer = (IStreamSerializer<byte[]>)Serializers.ByteArray;
+
+
+            var stream = new MemoryStream();
+            serializer.Serialize(values, stream, SerializationContext.Empty);
+
+            Assert.Equal(values, Deserializers.ByteArray.Deserialize(stream.ToArray(), false, SerializationContext.Empty));
+
         }
     }
 }

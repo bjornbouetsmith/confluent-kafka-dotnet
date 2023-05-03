@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Xunit;
 
 
@@ -29,6 +30,19 @@ namespace Confluent.Kafka.UnitTests.Serialization
             foreach (var value in TestData)
             {
                 Assert.Equal(value, Deserializers.Single.Deserialize(Serializers.Single.Serialize(value, SerializationContext.Empty), false, SerializationContext.Empty));
+            }
+        }
+
+        [Fact]
+        public void CanSerializeToStreamAndReconstructFloat()
+        {
+            IStreamSerializer<float> serializer = (IStreamSerializer<float>)Serializers.Single;
+            foreach (var value in TestData)
+            {
+                var stream = new MemoryStream();
+                serializer.Serialize(value, stream, SerializationContext.Empty);
+
+                Assert.Equal(value, Deserializers.Single.Deserialize(stream.ToArray(), false, SerializationContext.Empty));
             }
         }
 

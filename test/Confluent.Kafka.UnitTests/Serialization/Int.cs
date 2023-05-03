@@ -15,6 +15,7 @@
 // Refer to LICENSE for more information.
 
 using System;
+using System.IO;
 using Xunit;
 
 
@@ -53,7 +54,7 @@ namespace Confluent.Kafka.UnitTests.Serialization
 
                 Assert.Equal(bytes1.Length, bytes2.Length);
 
-                for (int i=0; i<bytes1.Length; ++i)
+                for (int i = 0; i < bytes1.Length; ++i)
                 {
                     Assert.Equal(bytes1[i], bytes2[i]);
                 }
@@ -67,6 +68,20 @@ namespace Confluent.Kafka.UnitTests.Serialization
             {
                 var reconstructed = Deserializers.Int32.Deserialize(Serializers.Int32.Serialize(theInt, SerializationContext.Empty), false, SerializationContext.Empty);
                 Assert.Equal(theInt, reconstructed);
+            }
+        }
+
+
+        [Fact]
+        public void CanSerializeToStreamAndReconstructInt()
+        {
+            IStreamSerializer<int> serializer = (IStreamSerializer<int>)Serializers.Int32;
+            foreach (var value in toTest)
+            {
+                var stream = new MemoryStream();
+                serializer.Serialize(value, stream, SerializationContext.Empty);
+
+                Assert.Equal(value, Deserializers.Int32.Deserialize(stream.ToArray(), false, SerializationContext.Empty));
             }
         }
     }

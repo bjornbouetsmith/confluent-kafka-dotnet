@@ -42,30 +42,19 @@ namespace Confluent.Kafka
             public PartitionerDelegate defaultPartitioner;
         }
 
-        private ISerializer<TKey> keySerializer;
-        private ISerializer<TValue> valueSerializer;
-        private IAsyncSerializer<TKey> asyncKeySerializer;
-        private IAsyncSerializer<TValue> asyncValueSerializer;
-
-        private static readonly Dictionary<Type, object> defaultSerializers = new Dictionary<Type, object>
-        {
-            { typeof(Null), Serializers.Null },
-            { typeof(int), Serializers.Int32 },
-            { typeof(long), Serializers.Int64 },
-            { typeof(string), Serializers.Utf8 },
-            { typeof(float), Serializers.Single },
-            { typeof(double), Serializers.Double },
-            { typeof(byte[]), Serializers.ByteArray }
-        };
+        protected internal ISerializer<TKey> keySerializer;
+        protected internal ISerializer<TValue> valueSerializer;
+        protected internal IAsyncSerializer<TKey> asyncKeySerializer;
+        protected internal IAsyncSerializer<TValue> asyncValueSerializer;
 
         private int cancellationDelayMaxMs;
         private bool disposeHasBeenCalled = false;
         private object disposeHasBeenCalledLockObj = new object();
 
         private bool manualPoll = false;
-        private bool enableDeliveryReports = true;
-        private bool enableDeliveryReportKey = true;
-        private bool enableDeliveryReportValue = true;
+        protected internal bool enableDeliveryReports = true;
+        protected internal bool enableDeliveryReportKey = true;
+        protected internal bool enableDeliveryReportValue = true;
         private bool enableDeliveryReportTimestamp = true;
         private bool enableDeliveryReportHeaders = true;
         private bool enableDeliveryReportPersistedStatus = true;
@@ -74,7 +63,7 @@ namespace Confluent.Kafka
         private Handle borrowedHandle;
 
         private SafeKafkaHandle KafkaHandle
-            => ownedKafkaHandle != null 
+            => ownedKafkaHandle != null
                 ? ownedKafkaHandle
                 : borrowedHandle.LibrdkafkaHandle;
 
@@ -277,7 +266,7 @@ namespace Confluent.Kafka
             }
         }
 
-        private void ProduceImpl(
+        protected internal void ProduceImpl(
             string topic,
             byte[] val, int valOffset, int valLength,
             byte[] key, int keyOffset, int keyLength,
@@ -508,12 +497,11 @@ namespace Confluent.Kafka
             // setup key serializer.
             if (keySerializer == null && asyncKeySerializer == null)
             {
-                if (!defaultSerializers.TryGetValue(typeof(TKey), out object serializer))
+                if (!Serializers.TryGetSerializer(out this.keySerializer))
                 {
                     throw new ArgumentNullException(
                         $"Key serializer not specified and there is no default serializer defined for type {typeof(TKey).Name}.");
                 }
-                this.keySerializer = (ISerializer<TKey>)serializer;
             }
             else if (keySerializer == null && asyncKeySerializer != null)
             {
@@ -531,12 +519,11 @@ namespace Confluent.Kafka
             // setup value serializer.
             if (valueSerializer == null && asyncValueSerializer == null)
             {
-                if (!defaultSerializers.TryGetValue(typeof(TValue), out object serializer))
+                if (!Serializers.TryGetSerializer(out this.valueSerializer))
                 {
                     throw new ArgumentNullException(
                         $"Value serializer not specified and there is no default serializer defined for type {typeof(TValue).Name}.");
                 }
-                this.valueSerializer = (ISerializer<TValue>)serializer;
             }
             else if (valueSerializer == null && asyncValueSerializer != null)
             {
@@ -566,7 +553,7 @@ namespace Confluent.Kafka
                 builder.AsyncKeySerializer, builder.AsyncValueSerializer);
         }
 
-        internal Producer(ProducerBuilder<TKey, TValue> builder)
+        internal Producer(ProducerBuilder<TKey, TValue> builder, bool initializeSerializers = true)
         {
             var baseConfig = builder.ConstructBaseConfig(this);
             var partitioners = baseConfig.partitioners;
@@ -736,9 +723,12 @@ namespace Confluent.Kafka
                 callbackTask = StartPollTask(callbackCts.Token);
             }
 
-            InitializeSerializers(
-                builder.KeySerializer, builder.ValueSerializer,
-                builder.AsyncKeySerializer, builder.AsyncValueSerializer);
+            if (initializeSerializers)
+            {
+                InitializeSerializers(
+                    builder.KeySerializer, builder.ValueSerializer,
+                    builder.AsyncKeySerializer, builder.AsyncValueSerializer);
+            }
         }
 
 
@@ -939,7 +929,7 @@ namespace Confluent.Kafka
             }
         }
 
-        private class TypedTaskDeliveryHandlerShim : TaskCompletionSource<DeliveryResult<TKey, TValue>>, IDeliveryHandler
+        protected internal class TypedTaskDeliveryHandlerShim : TaskCompletionSource<DeliveryResult<TKey, TValue>>, IDeliveryHandler
         {
             public TypedTaskDeliveryHandlerShim(string topic, TKey key, TValue val)
                 : base(TaskCreationOptions.RunContinuationsAsynchronously)
@@ -994,7 +984,7 @@ namespace Confluent.Kafka
             }
         }
 
-        private class TypedDeliveryHandlerShim_Action : IDeliveryHandler
+        protected internal class TypedDeliveryHandlerShim_Action : IDeliveryHandler
         {
             public TypedDeliveryHandlerShim_Action(string topic, TKey key, TValue val, Action<DeliveryReport<TKey, TValue>> handler)
             {

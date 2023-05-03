@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Xunit;
 
 namespace Confluent.Kafka.UnitTests.Serialization
@@ -27,6 +28,16 @@ namespace Confluent.Kafka.UnitTests.Serialization
         public void CanReconstructLong(long value)
         {
             Assert.Equal(value, Deserializers.Int64.Deserialize(Serializers.Int64.Serialize(value, SerializationContext.Empty), false, SerializationContext.Empty));
+        }
+
+        [Theory]
+        [MemberData(nameof(TestData))]
+        public void CanSerializeToStreamAndReconstructLong(long value)
+        {
+            IStreamSerializer<long> serializer = (IStreamSerializer<long>)Serializers.Int64;
+            var stream = new MemoryStream();
+            serializer.Serialize(value, stream, SerializationContext.Empty);
+            Assert.Equal(value, Deserializers.Int64.Deserialize(stream.ToArray(), false, SerializationContext.Empty));
         }
 
         [Fact]
