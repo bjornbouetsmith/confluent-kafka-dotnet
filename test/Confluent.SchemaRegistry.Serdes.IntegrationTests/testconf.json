@@ -1,4 +1,4 @@
 ﻿{
-  "bootstrapServer": "localhost:9092",
+  "bootstrapServer": "192.168.2.101:9092",
   "schemaRegistryServer": "localhost:8081"
 }

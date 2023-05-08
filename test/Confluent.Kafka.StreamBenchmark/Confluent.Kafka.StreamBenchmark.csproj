@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>Confluent.Kafka.StreamBenchmark</AssemblyName>
+    <TargetFrameworks>net462;net6.0</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <LangVersion>8.0</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.13.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Confluent.Kafka/Confluent.Kafka.csproj" />
+  </ItemGroup>
+
+</Project>

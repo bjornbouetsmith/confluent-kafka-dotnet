@@ -15,8 +15,8 @@
 // Refer to LICENSE for more information.
 
 using System;
+using System.Collections.Generic;
 using System.Text;
-
 
 namespace Confluent.Kafka
 {
@@ -29,7 +29,54 @@ namespace Confluent.Kafka
         ///     String (UTF8) serializer.
         /// </summary>
         public static ISerializer<string> Utf8 = new Utf8Serializer();
-        
+
+        private static readonly Dictionary<Type, object> defaultSerializers;
+
+        static Serializers()
+        {
+            defaultSerializers = new Dictionary<Type, object>
+            {
+                { typeof(Null), Null },
+                { typeof(int), Int32 },
+                { typeof(long), Int64 },
+                { typeof(string), Utf8 },
+                { typeof(float), Single },
+                { typeof(double), Double },
+                { typeof(byte[]), ByteArray }
+            };
+        }
+
+        /// <summary>
+        /// Tries to get a serializer from the list of default serializers registered
+        /// </summary>
+        public static bool TryGetSerializer<T>(out ISerializer<T> serializer)
+        {
+            if (defaultSerializers.TryGetValue(typeof(T), out object serializerObject))
+            {
+                serializer=(ISerializer<T>)serializerObject;
+                return true;
+            }
+
+            serializer = null;
+            return false;
+        }
+
+        /// <summary>
+        /// Tries to get a stream serializer from the list of default serializers registered
+        /// </summary>
+        public static bool TryGetStreamSerializer<T>(out IMemorySerializer<T> serializer)
+        {
+            if (defaultSerializers.TryGetValue(typeof(T), out object serializerObject))
+            {
+                serializer = (IMemorySerializer<T>)serializerObject;
+                return true;
+            }
+
+            serializer = null;
+            return false;
+        }
+
+
         private class Utf8Serializer : ISerializer<string>
         {
             public byte[] Serialize(string data, SerializationContext context)

@@ -114,6 +114,9 @@ namespace Confluent.Kafka
         /// </summary>
         internal protected IAsyncSerializer<TValue> AsyncValueSerializer { get; set; }
 
+        internal protected IMemorySerializer<TKey> KeyMemorySerializer { get; set; }
+        internal protected IMemorySerializer<TValue> ValueMemorySerializer { get; set; }
+
         internal Producer<TKey,TValue>.Config ConstructBaseConfig(Producer<TKey, TValue> producer)
         {
             return new Producer<TKey, TValue>.Config
@@ -364,6 +367,19 @@ namespace Confluent.Kafka
                 throw new InvalidOperationException("Value serializer may not be specified more than once.");
             }
             this.AsyncValueSerializer = serializer;
+            return this;
+        }
+
+        public ProducerBuilder<TKey, TValue> SetKeySerializer(IMemorySerializer<TKey> serializer)
+        {
+            this.KeyMemorySerializer = serializer;
+            return this;
+
+        }
+
+        public ProducerBuilder<TKey, TValue> SetValueSerializer(IMemorySerializer<TValue> serializer)
+        {
+            this.ValueMemorySerializer = serializer;
             return this;
         }
 
