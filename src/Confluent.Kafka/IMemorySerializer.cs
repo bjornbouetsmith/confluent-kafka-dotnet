@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 namespace Confluent.Kafka
 {
     /// <summary>
-    /// Defines a serializer that serializes to a memory stream for efficient buffer re-use
+    /// Defines a serializer that serializes to a <see cref="ReadOnlyMemory{byte}"/> which allow imlementation that re-use buffers
     /// </summary>
     public interface IMemorySerializer<T>
     {
