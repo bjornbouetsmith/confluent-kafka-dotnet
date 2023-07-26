@@ -61,22 +61,6 @@ namespace Confluent.Kafka
             return false;
         }
 
-        /// <summary>
-        /// Tries to get a stream serializer from the list of default serializers registered
-        /// </summary>
-        public static bool TryGetStreamSerializer<T>(out IMemorySerializer<T> serializer)
-        {
-            if (defaultSerializers.TryGetValue(typeof(T), out object serializerObject))
-            {
-                serializer = (IMemorySerializer<T>)serializerObject;
-                return true;
-            }
-
-            serializer = null;
-            return false;
-        }
-
-
         private class Utf8Serializer : ISerializer<string>
         {
             public byte[] Serialize(string data, SerializationContext context)
